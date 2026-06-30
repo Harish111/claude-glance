@@ -20,14 +20,18 @@ The overlay is a native macOS panel that **floats above every app, on every Spac
 
 ## Install
 
-In Claude Code:
+> ⚠️ **Plugins only work in the terminal CLI version of Claude Code** — not the desktop or web app. If `/plugin` doesn't exist where you type it, see [Troubleshooting](#troubleshooting).
 
-```
-/plugin marketplace add Harish111/claude-glance
-/plugin install claude-glance@harish-tools
-```
-
-Then **restart Claude Code** (hooks only load at session start).
+1. Open your terminal and start Claude Code:
+   ```bash
+   claude
+   ```
+2. **Inside** the Claude Code prompt (not the shell), run:
+   ```
+   /plugin marketplace add Harish111/claude-glance
+   /plugin install claude-glance@harish-tools
+   ```
+3. Then **restart Claude Code** (hooks only load at session start). After install you may see `Run /reload-plugins to apply` — `/reload-plugins` works too, but a full restart is the most reliable.
 
 On the first session after install, the overlay's Swift source is compiled once into `~/.claude/claude-glance/` (locally compiled, so no Gatekeeper warning) and launched. It then auto-starts on every session and survives app restarts and reboots.
 
@@ -58,9 +62,41 @@ rm -rf ~/.claude/claude-glance
 
 ## Troubleshooting
 
-- **No light after install** → make sure you **restarted** Claude Code, and that `swiftc` exists (`xcode-select --install`).
-- **No sound** → check your volume isn't muted; sounds use macOS system files in `/System/Library/Sounds/`.
-- **Light doesn't change** → confirm the plugin is enabled (`/plugin`), then restart.
+### `/plugin isn't available in this environment`
+The plugin system exists **only in the terminal CLI** version of Claude Code. The desktop app and web app (claude.ai/code) don't have it — if you type `/plug` there you'll only see *skills*, no `/plugin` command. Run the install from a terminal instead: open Terminal, run `claude`, then type the `/plugin` commands inside it.
+
+### `command not found: /plugin` (in your shell)
+`/plugin` is **not** a shell command. Don't type it at the `zsh`/`bash` prompt. First start Claude Code with `claude`, then type `/plugin …` **inside** the Claude Code prompt.
+
+### Install fails: `Failed to parse marketplace ... claude-plugins-official ... Invalid schema`
+This error is about Anthropic's **built-in** marketplace, not claude-glance — but it aborts the whole install. It means your **Claude Code is outdated**: its plugin-schema parser is older than the current official marketplace manifest (you'll see `plugins.N.source: Invalid input`, `Unrecognized key: "displayName"`, etc.).
+
+**Fix — update Claude Code, then retry:**
+```bash
+claude update
+```
+If `claude update` isn't supported by your install method, use npm:
+```bash
+npm install -g @anthropic-ai/claude-code@latest
+```
+Then start `claude` again and re-run `/plugin install claude-glance@harish-tools` (the marketplace stays added). Tip: `Successfully added marketplace: harish-tools` earlier means *your* part worked — only the outdated parser was blocking.
+
+### Every sound plays twice
+You have **two copies** running — e.g. the plugin **and** a manual hooks setup in `~/.claude/settings.json` that calls the same scripts. Keep one. To drop the manual copy, remove the relevant entries from the `hooks` block in `~/.claude/settings.json`; to drop the plugin, `/plugin uninstall claude-glance@harish-tools`.
+
+### No light after install
+- Make sure you **restarted** Claude Code (or ran `/reload-plugins`).
+- Confirm `swiftc` exists: `xcode-select --install`.
+- Check it compiled/launched: `ls ~/.claude/claude-glance/` should contain `glance` (the binary) and `status`. If the binary is missing, compilation failed — run `swiftc -O ~/.claude/plugins/**/scripts/glance.swift -o /tmp/glance` manually to see the error.
+
+### No sound
+Check your volume isn't muted. Sounds use macOS system files in `/System/Library/Sounds/` (Glass, Tink) via `afplay`.
+
+### Light shows but doesn't change color
+The state file is updated but the overlay may be stale. Confirm one process is running (`pgrep -f glance`), then restart Claude Code so the lifecycle hooks reload.
+
+### It works in the terminal but not in the desktop app
+Expected — the desktop app has no plugin system, so the overlay won't run there. (A manual-hooks setup can cover the desktop app, but that's outside this plugin.)
 
 ## License
 
