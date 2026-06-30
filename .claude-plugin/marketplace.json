@@ -1,0 +1,13 @@
+{
+  "name": "harish-tools",
+  "owner": {
+    "name": "Harish"
+  },
+  "plugins": [
+    {
+      "name": "claude-glance",
+      "source": "./",
+      "description": "Floating traffic-light status overlay + sound alerts for Claude Code (macOS)."
+    }
+  ]
+}

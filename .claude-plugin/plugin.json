@@ -1,0 +1,9 @@
+{
+  "name": "claude-glance",
+  "description": "A floating macOS traffic-light overlay plus sound alerts that show Claude Code's status at a glance: red = waiting for your approval, yellow = working, green = idle/done.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Harish"
+  },
+  "keywords": ["status", "notification", "overlay", "macos", "hooks"]
+}

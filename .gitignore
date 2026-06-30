@@ -1,0 +1,4 @@
+# Compiled overlay binary (built per-machine on install)
+cc-traffic-light
+*.o
+.DS_Store
