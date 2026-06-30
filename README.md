@@ -8,15 +8,20 @@ Know what Claude Code is doing **at a glance** — a floating **traffic-light ov
 | 🟡 Yellow | Running / working on your task | — |
 | 🟢 Green | Done, idle, ready for your next message | Tink |
 
-The overlay is a native macOS panel that **floats above every app, on every Space, and over fullscreen apps**, without ever stealing focus.
+On **macOS** the overlay is a native panel that **floats above every app, on every Space, and over fullscreen apps**, without ever stealing focus. On **Windows** (beta) it's an always-on-top window — see [Windows (beta)](#windows-beta).
 
-> **Platform:** macOS only for now (uses Swift/AppKit for the overlay and `afplay` for sounds). On Windows/Linux the plugin installs but stays inactive — cross-platform support is planned.
+> **Platform:** macOS (stable) and Windows (beta). Linux installs but stays inactive for now. macOS uses Swift/AppKit + `afplay`; Windows uses PowerShell/WinForms + system sounds.
 
 ## Requirements
 
-- macOS
+**macOS:**
 - **Xcode Command Line Tools** (provides `swiftc`). If you don't have them: `xcode-select --install`
-- Claude Code
+- Claude Code (terminal CLI)
+
+**Windows (beta):**
+- **Git for Windows / Git Bash** — required, since the hooks run as bash scripts that dispatch to PowerShell
+- **PowerShell** (built into Windows) for the overlay and sounds
+- Claude Code (terminal CLI)
 
 ## Install
 
@@ -44,8 +49,26 @@ On the first session after install, the overlay's Swift source is compiled once 
 ## How it works
 
 - Claude Code lifecycle **hooks** (`hooks/hooks.json`) write one word — `red`, `yellow`, or `green` — to `~/.claude/claude-glance/status`.
-- The overlay (`scripts/glance.swift`) polls that file ~5×/sec and lights the matching lamp.
-- `scripts/launch.sh` compiles-if-needed and launches the overlay idempotently on `SessionStart`.
+- The overlay polls that file ~5×/sec and lights the matching lamp — `scripts/glance.swift` on macOS, `scripts/glance.ps1` on Windows.
+- `scripts/launch.sh` detects the OS and launches the right overlay idempotently on `SessionStart` (compiling the Swift binary on macOS; spawning PowerShell on Windows). `scripts/notify.sh` writes the state word and plays the matching sound.
+
+## Windows (beta)
+
+Windows support is **new and needs real-world testing** — please report issues.
+
+**Prerequisites:** Git Bash (Git for Windows) and PowerShell (built in).
+
+**Install** is the same as macOS — in the terminal `claude`:
+```
+/plugin marketplace add Harish111/claude-glance
+/plugin install claude-glance@harish-tools
+```
+…then restart. The overlay appears top-right and tracks the same red/yellow/green states, with Windows system sounds for the alerting states.
+
+**Known limitations (v1):**
+- The overlay is always-on-top on the **current virtual desktop** only — it does **not** yet pin across all desktops or sit above fullscreen apps (the macOS "all Spaces" behavior has no clean Windows equivalent).
+- It may briefly take focus when it first launches.
+- Requires Git Bash; a pure-PowerShell (no Git Bash) path may come later.
 
 ## Uninstall
 
